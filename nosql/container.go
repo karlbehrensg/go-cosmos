@@ -26,7 +26,6 @@ func (a *cosmosClient) NewContainerClient(dbName, containerName string) (*contai
 }
 
 func (c *containerClient) CreateItem(item interface{}, id string) error {
-	// specifies the value of the partiton key
 	pk := azcosmos.NewPartitionKeyString(id)
 
 	b, err := json.Marshal(item)
@@ -34,12 +33,10 @@ func (c *containerClient) CreateItem(item interface{}, id string) error {
 		return err
 	}
 
-	// setting the item options upon creating ie. consistency level
 	itemOptions := azcosmos.ItemOptions{
 		ConsistencyLevel: azcosmos.ConsistencyLevelSession.ToPtr(),
 	}
 
-	// this is a helper function that swallows 409 errors
 	errorIs409 := func(err error) bool {
 		var responseErr *azcore.ResponseError
 		return err != nil && errors.As(err, &responseErr) && responseErr.StatusCode == 409
@@ -61,7 +58,6 @@ func (c *containerClient) CreateItem(item interface{}, id string) error {
 }
 
 func (c *containerClient) ReadItem(partitionKey, id string) (map[string]interface{}, error) {
-	// Specifies the value of the partiton key
 	pk := azcosmos.NewPartitionKeyString(partitionKey)
 
 	itemResponse, err := c.client.ReadItem(context.Background(), pk, id, nil)
@@ -77,4 +73,24 @@ func (c *containerClient) ReadItem(partitionKey, id string) (map[string]interfac
 	log.Printf("Status %d. Item %v read. ActivityId %s. Consuming %v Request Units.\n", itemResponse.RawResponse.StatusCode, pk, itemResponse.ActivityID, itemResponse.RequestCharge)
 
 	return item, nil
+}
+
+func (c *containerClient) ReplaceItem(item interface{}, partitionKey, id string) error {
+	pk := azcosmos.NewPartitionKeyString(partitionKey)
+
+	marshalled, err := json.Marshal(item)
+	if err != nil {
+		return err
+	}
+
+	itemResponse, err := c.client.ReplaceItem(context.Background(), pk, id, marshalled, nil)
+	if err != nil {
+		var responseErr *azcore.ResponseError
+		errors.As(err, &responseErr)
+		return err
+	}
+
+	log.Printf("Status %d. Item %v replaced. ActivityId %s. Consuming %v Request Units.\n", itemResponse.RawResponse.StatusCode, pk, itemResponse.ActivityID, itemResponse.RequestCharge)
+
+	return nil
 }

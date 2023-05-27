@@ -63,4 +63,9 @@ func main() {
 
 	log.Printf("Item2 read: %+v\n", item2)
 
+	item.Name = "Jane Doe"
+
+	if err := containerClient.ReplaceItem(item, item.Email, id); err != nil {
+		log.Fatal(err)
+	}
 }
