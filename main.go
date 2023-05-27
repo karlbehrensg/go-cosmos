@@ -6,7 +6,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/karlbehrensg/go-cosmos/nosql"
-	"github.com/mitchellh/mapstructure"
 )
 
 func main() {
@@ -48,24 +47,18 @@ func main() {
 		log.Fatal(err)
 	}
 
-	itemRead, err := containerClient.ReadItem(item.Email, id)
+	_, err = containerClient.ReadItem(item.Email, id)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	log.Printf("Item read: %+v\n", itemRead)
-
-	var item2 Item
-
-	if err := mapstructure.Decode(itemRead, &item2); err != nil {
-		log.Fatal(err)
-	}
-
-	log.Printf("Item2 read: %+v\n", item2)
-
 	item.Name = "Jane Doe"
 
 	if err := containerClient.ReplaceItem(item, item.Email, id); err != nil {
+		log.Fatal(err)
+	}
+
+	if err := containerClient.DeleteItem(item.Email, item.ID); err != nil {
 		log.Fatal(err)
 	}
 }

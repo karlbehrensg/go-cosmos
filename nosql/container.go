@@ -85,12 +85,23 @@ func (c *containerClient) ReplaceItem(item interface{}, partitionKey, id string)
 
 	itemResponse, err := c.client.ReplaceItem(context.Background(), pk, id, marshalled, nil)
 	if err != nil {
-		var responseErr *azcore.ResponseError
-		errors.As(err, &responseErr)
 		return err
 	}
 
 	log.Printf("Status %d. Item %v replaced. ActivityId %s. Consuming %v Request Units.\n", itemResponse.RawResponse.StatusCode, pk, itemResponse.ActivityID, itemResponse.RequestCharge)
+
+	return nil
+}
+
+func (c *containerClient) DeleteItem(partitionKey, id string) error {
+	pk := azcosmos.NewPartitionKeyString(partitionKey)
+
+	itemResponse, err := c.client.DeleteItem(context.Background(), pk, id, nil)
+	if err != nil {
+		return err
+	}
+
+	log.Printf("Status %d. Item %v deleted. ActivityId %s. Consuming %v Request Units.\n", itemResponse.RawResponse.StatusCode, pk, itemResponse.ActivityID, itemResponse.RequestCharge)
 
 	return nil
 }
